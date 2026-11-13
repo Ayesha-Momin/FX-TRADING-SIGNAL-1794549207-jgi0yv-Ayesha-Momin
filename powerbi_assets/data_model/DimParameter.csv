@@ -1,0 +1,6 @@
+ParameterID,ParameterName,Value,Description
+1,MA_Period,20.0,Moving average lookback period
+2,RSI_Period,14.0,RSI calculation window
+3,Risk_Free_Rate,0.045,Annualized US Treasury risk-free rate
+4,Confidence_Threshold,0.65,Minimum confidence score for signal execution
+5,Max_Single_Exposure,0.25,Maximum portfolio notional allocated to single currency pair

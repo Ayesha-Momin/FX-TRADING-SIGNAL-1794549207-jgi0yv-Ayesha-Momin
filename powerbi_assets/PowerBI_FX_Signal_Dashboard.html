@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FX Signal Lab - Institutional Power BI Dashboard</title>
+    <!-- Chart.js & Fonts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #131b2e;
+            --bg-card: #182238;
+            --border: #223254;
+            --accent-blue: #0088ff;
+            --accent-cyan: #00d2ff;
+            --accent-green: #00e676;
+            --accent-red: #ff3366;
+            --accent-gold: #ffb300;
+            --text-primary: #f0f4f8;
+            --text-secondary: #94a3b8;
+            --font-main: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 14px;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .logo-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+        .logo-text p { font-size: 11px; color: var(--accent-cyan); font-weight: 600; text-transform: uppercase; }
+        
+        .nav-menu { list-style: none; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .nav-item:hover { background-color: var(--bg-card); color: var(--text-primary); }
+        .nav-item.active { background: linear-gradient(90deg, rgba(0, 136, 255, 0.2), transparent); color: var(--accent-cyan); border-left: 3px solid var(--accent-cyan); }
+        .nav-item i { width: 18px; font-size: 14px; text-align: center; }
+
+        .system-status {
+            padding: 12px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 11px;
+        }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--accent-green); margin-right: 6px; }
+
+        /* Main Workspace */
+        .workspace {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background-color: var(--bg-primary);
+        }
+        .topbar {
+            height: 60px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            background-color: var(--bg-secondary);
+        }
+        .topbar-title { font-size: 17px; font-weight: 700; }
+        .topbar-filters { display: flex; gap: 12px; align-items: center; }
+        .filter-select {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: var(--font-main);
+            outline: none;
+        }
+
+        .content-area { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* KPI Cards Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .kpi-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+        }
+        .kpi-title { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; }
+        .kpi-value { font-size: 26px; font-weight: 800; font-family: var(--font-mono); color: var(--text-primary); }
+        .kpi-badge { font-size: 11px; margin-top: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-green { color: var(--accent-green); }
+        .badge-blue { color: var(--accent-cyan); }
+        .badge-gold { color: var(--accent-gold); }
+
+        /* Layout Grid */
+        .grid-2col { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .grid-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { text-align: left; padding: 10px; color: var(--text-secondary); border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; font-size: 11px; }
+        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: var(--font-mono); }
+        tr:hover { background-color: var(--bg-card); }
+        .status-pill { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+        .pill-buy { background-color: rgba(0, 230, 118, 0.15); color: var(--accent-green); }
+        .pill-sell { background-color: rgba(255, 51, 102, 0.15); color: var(--accent-red); }
+
+        /* Hide tabs */
+        .tab-content { display: none; }
+        .tab-content.active { display: flex; flex-direction: column; gap: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="logo-text">
+                <h2>FX Signal Lab</h2>
+                <p>Power BI Analytics</p>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item active" onclick="switchTab('page1', this)"><i class="fa-solid fa-satellite-dish"></i> 1. Signal Overview</li>
+            <li class="nav-item" onclick="switchTab('page2', this)"><i class="fa-solid fa-shield-halved"></i> 2. Risk Management</li>
+            <li class="nav-item" onclick="switchTab('page3', this)"><i class="fa-solid fa-coins"></i> 3. Currency Pair Deep-Dive</li>
+            <li class="nav-item" onclick="switchTab('page4', this)"><i class="fa-solid fa-fire"></i> 4. Session Heatmap</li>
+            <li class="nav-item" onclick="switchTab('page5', this)"><i class="fa-solid fa-dice-d20"></i> 5. Monte Carlo & VaR</li>
+            <li class="nav-item" onclick="switchTab('page6', this)"><i class="fa-solid fa-trophy"></i> 6. Strategy Comparison</li>
+        </ul>
+
+        <div class="system-status">
+            <div><span class="status-dot"></span> <strong>Power BI Engine:</strong> Active</div>
+            <div style="color: var(--text-secondary); margin-top: 4px;">120+ DAX Measures Validated</div>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+        <div class="topbar">
+            <div class="topbar-title" id="page-title">1. Signal Overview & Real-Time Telemetry</div>
+            <div class="topbar-filters">
+                <select class="filter-select" id="pairFilter" onchange="updateCharts()">
+                    <option value="EUR/USD">EUR/USD</option>
+                    <option value="USD/JPY">USD/JPY</option>
+                    <option value="GBP/USD">GBP/USD</option>
+                    <option value="AUD/USD">AUD/USD</option>
+                    <option value="USD/INR">USD/INR</option>
+                </select>
+                <select class="filter-select">
+                    <option>Composite Signal</option>
+                    <option>Reinforcement Learning (PPO)</option>
+                    <option>Random Forest (ML)</option>
+                    <option>XGBoost (ML)</option>
+                </select>
+                <select class="filter-select">
+                    <option>Lookback: 2023-2024</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="content-area">
+
+            <!-- PAGE 1: SIGNAL OVERVIEW -->
+            <div id="page1" class="tab-content active">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Signal Hit Rate (Accuracy)</div>
+                        <div class="kpi-value">68.4%</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-arrow-trend-up"></i> +4.2% vs Baseline</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Average Confidence</div>
+                        <div class="kpi-value">78.2%</div>
+                        <div class="kpi-badge badge-blue"><i class="fa-solid fa-circle-check"></i> High Consensus</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Total Realized P&L</div>
+                        <div class="kpi-value">$24,190</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-dollar-sign"></i> +24.19% Return</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Profit Factor</div>
+                        <div class="kpi-value">1.82</div>
+                        <div class="kpi-badge badge-gold"><i class="fa-solid fa-crown"></i> Institutional Grade</div>
+                    </div>
+                </div>
+
+                <div class="grid-2col">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-chart-candlestick"></i> Price Action with Indicator Consensus Overlays</div>
+                        </div>
+                        <canvas id="priceChart" height="230"></canvas>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-pie-chart"></i> Indicator Weight Distribution</div>
+                        </div>
+                        <canvas id="indicatorDoughnut" height="230"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-list-check"></i> Recent Executed Signals (FactSignals)</div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Signal ID</th>
+                                <th>Pair</th>
+                                <th>Direction</th>
+                                <th>Score</th>
+                                <th>Confidence</th>
+                                <th>Stop Loss</th>
+                                <th>Take Profit</th>
+                                <th>Outcome P&L</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SIG-4091</td><td>EUR/USD</td><td><span class="status-pill pill-buy">BUY</span></td>
+                                <td>+78.5</td><td>84.2%</td><td>1.08150</td><td>1.09200</td><td style="color:var(--accent-green);">+$280.00</td>
+                            </tr>
+                            <tr>
+                                <td>SIG-4092</td><td>USD/JPY</td><td><span class="status-pill pill-sell">SELL</span></td>
+                                <td>-64.0</td><td>72.5%</td><td>145.850</td><td>144.100</td><td style="color:var(--accent-green);">+$410.00</td>
+                            </tr>
+                            <tr>
+                                <td>SIG-4093</td><td>GBP/USD</td><td><span class="status-pill pill-buy">BUY</span></td>
+                                <td>+82.0</td><td>89.1%</td><td>1.25100</td><td>1.26400</td><td style="color:var(--accent-green);">+$195.00</td>
+                            </tr>
+                            <tr>
+                                <td>SIG-4094</td><td>AUD/USD</td><td><span class="status-pill pill-sell">SELL</span></td>
+                                <td>-55.2</td><td>68.0%</td><td>0.67550</td><td>0.66600</td><td style="color:var(--accent-red);">-$85.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PAGE 2: RISK MANAGEMENT -->
+            <div id="page2" class="tab-content">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Parametric 1-Day VaR (95%)</div>
+                        <div class="kpi-value">$76,230</div>
+                        <div class="kpi-badge badge-gold"><i class="fa-solid fa-shield"></i> Within Risk Limit</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Expected Shortfall (CVaR 95%)</div>
+                        <div class="kpi-value">$97,250</div>
+                        <div class="kpi-badge badge-blue"><i class="fa-solid fa-water"></i> Tail Risk Buffer</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Maximum Drawdown</div>
+                        <div class="kpi-value">8.42%</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-lock"></i> Target &lt; 12%</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Annualized Sharpe Ratio</div>
+                        <div class="kpi-value">1.94</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-award"></i> Exceptional</div>
+                    </div>
+                </div>
+
+                <div class="grid-2col">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-chart-area"></i> Cumulative Drawdown Series (%)</div>
+                        </div>
+                        <canvas id="drawdownChart" height="230"></canvas>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-scale-balanced"></i> Exposure Decomposition by Region</div>
+                        </div>
+                        <canvas id="exposureDoughnut" height="230"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 3: CURRENCY PAIRS -->
+            <div id="page3" class="tab-content">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Best Pair Total P&L</div>
+                        <div class="kpi-value">EUR/USD (+$9,850)</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-star"></i> Top Contributor</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">USD/JPY Carry Differential</div>
+                        <div class="kpi-value">+4.75% Ann.</div>
+                        <div class="kpi-badge badge-blue"><i class="fa-solid fa-coins"></i> Positive Carry</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">USD/INR Intervention Corridor</div>
+                        <div class="kpi-value">82.50 - 83.50</div>
+                        <div class="kpi-badge badge-gold"><i class="fa-solid fa-building-columns"></i> Mean-Reverting</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Avg Multi-Pair Spread</div>
+                        <div class="kpi-value">1.42 Pips</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-tag"></i> Institutional Tight</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-table-cells"></i> 5-Pair Empirical Correlation Matrix</div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Pair</th><th>EUR/USD</th><th>USD/JPY</th><th>GBP/USD</th><th>AUD/USD</th><th>USD/INR</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>EUR/USD</strong></td><td>1.00</td><td style="color:var(--accent-red);">-0.42</td><td style="color:var(--accent-green);">+0.86</td><td style="color:var(--accent-green);">+0.68</td><td style="color:var(--accent-red);">-0.15</td></tr>
+                            <tr><td><strong>USD/JPY</strong></td><td style="color:var(--accent-red);">-0.42</td><td>1.00</td><td style="color:var(--accent-red);">-0.38</td><td style="color:var(--accent-red);">-0.31</td><td style="color:var(--accent-green);">+0.22</td></tr>
+                            <tr><td><strong>GBP/USD</strong></td><td style="color:var(--accent-green);">+0.86</td><td style="color:var(--accent-red);">-0.38</td><td>1.00</td><td style="color:var(--accent-green);">+0.72</td><td style="color:var(--accent-red);">-0.12</td></tr>
+                            <tr><td><strong>AUD/USD</strong></td><td style="color:var(--accent-green);">+0.68</td><td style="color:var(--accent-red);">-0.31</td><td style="color:var(--accent-green);">+0.72</td><td>1.00</td><td style="color:var(--accent-red);">-0.08</td></tr>
+                            <tr><td><strong>USD/INR</strong></td><td style="color:var(--accent-red);">-0.15</td><td style="color:var(--accent-green);">+0.22</td><td style="color:var(--accent-red);">-0.12</td><td style="color:var(--accent-red);">-0.08</td><td>1.00</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PAGE 4: SESSION HEATMAP -->
+            <div id="page4" class="tab-content">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">London / NY Overlap P&L</div>
+                        <div class="kpi-value">+$14,280</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-bolt"></i> 59% of Net Profit</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Asian Session Win Rate</div>
+                        <div class="kpi-value">58.2%</div>
+                        <div class="kpi-badge badge-blue"><i class="fa-solid fa-moon"></i> Lower Liquidity</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Overlap Premium Per Trade</div>
+                        <div class="kpi-value">+$112.50</div>
+                        <div class="kpi-badge badge-gold"><i class="fa-solid fa-arrow-up"></i> Over Non-Overlap</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Peak Execution Hour (UTC)</div>
+                        <div class="kpi-value">14:00 UTC</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-clock"></i> Optimal Fills</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-fire"></i> Hourly Expected Trade P&L by Session (0-23 UTC)</div>
+                    </div>
+                    <canvas id="sessionBarChart" height="220"></canvas>
+                </div>
+            </div>
+
+            <!-- PAGE 5: MONTE CARLO -->
+            <div id="page5" class="tab-content">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Simulated Scenarios</div>
+                        <div class="kpi-value">10,000</div>
+                        <div class="kpi-badge badge-blue"><i class="fa-solid fa-cube"></i> Correlated GBM</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Mean Expected P&L</div>
+                        <div class="kpi-value">+$12,271</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-arrow-trend-up"></i> Positive Expectancy</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Worst Scenario Loss</div>
+                        <div class="kpi-value">-$175,198</div>
+                        <div class="kpi-badge badge-gold"><i class="fa-solid fa-triangle-exclamation"></i> Extreme Black Swan</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Probability of Loss</div>
+                        <div class="kpi-value">41.7%</div>
+                        <div class="kpi-badge badge-green"><i class="fa-solid fa-dice"></i> 58.3% Win Scenarios</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-chart-simple"></i> Monte Carlo Portfolio P&L Distribution (10,000 Simulated Paths)</div>
+                    </div>
+                    <canvas id="mcChart" height="230"></canvas>
+                </div>
+            </div>
+
+            <!-- PAGE 6: STRATEGY COMPARISON -->
+            <div id="page6" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-chart-line"></i> Institutional Strategy Backtest Scorecard (7 Strategies)</div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Strategy Name</th>
+                                <th>Category</th>
+                                <th>Trades</th>
+                                <th>Win Rate</th>
+                                <th>Profit Factor</th>
+                                <th>Total P&L</th>
+                                <th>Sharpe</th>
+                                <th>Calmar</th>
+                                <th>DAX Rank</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>RL_PPO</strong></td><td>Reinforcement Learning</td><td>480</td><td>71.5%</td><td>1.92</td>
+                                <td style="color:var(--accent-green); font-weight:700;">+$28,450</td><td>2.12</td><td>3.15</td><td>#1</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Composite</strong></td><td>Multi-Factor Consensus</td><td>520</td><td>68.4%</td><td>1.82</td>
+                                <td style="color:var(--accent-green); font-weight:700;">+$24,190</td><td>1.94</td><td>2.88</td><td>#2</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ML_RF</strong></td><td>Machine Learning</td><td>460</td><td>65.2%</td><td>1.68</td>
+                                <td style="color:var(--accent-green);">+$19,840</td><td>1.75</td><td>2.40</td><td>#3</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ML_XGB</strong></td><td>Machine Learning</td><td>490</td><td>64.8%</td><td>1.65</td>
+                                <td style="color:var(--accent-green);">+$18,720</td><td>1.70</td><td>2.35</td><td>#4</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MACD_Trend</strong></td><td>Momentum</td><td>450</td><td>59.1%</td><td>1.45</td>
+                                <td style="color:var(--accent-green);">+$12,410</td><td>1.38</td><td>1.70</td><td>#5</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RSI_Reversal</strong></td><td>Mean Reversion</td><td>430</td><td>56.8%</td><td>1.38</td>
+                                <td style="color:var(--accent-green);">+$9,650</td><td>1.25</td><td>1.45</td><td>#6</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MA_Cross</strong></td><td>Trend Following</td><td>510</td><td>54.2%</td><td>1.32</td>
+                                <td style="color:var(--accent-green);">+$7,920</td><td>1.15</td><td>1.25</td><td>#7</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-chart-line"></i> Cumulative Strategy Equity Growth ($100k Initial Capital)</div>
+                    </div>
+                    <canvas id="equityGrowthChart" height="230"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(ni => ni.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            el.classList.add('active');
+            
+            const titles = {
+                'page1': '1. Signal Overview & Real-Time Telemetry',
+                'page2': '2. Risk Management & VaR Decomposition',
+                'page3': '3. Currency Pair Deep-Dive & Correlation Matrix',
+                'page4': '4. Session Heatmap & Liquidity Overlap',
+                'page5': '5. Monte Carlo Simulation & Extreme VaR Paths',
+                'page6': '6. Strategy Comparison & Dynamic Performance Ranking'
+            };
+            document.getElementById('page-title').innerText = titles[tabId];
+        }
+
+        // Initialize Charts
+        window.onload = function() {
+            // Price chart
+            const ctx1 = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 30}, (_, i) => `T-${30-i}h`),
+                    datasets: [{
+                        label: 'EUR/USD Spot Price',
+                        data: [1.0820, 1.0825, 1.0818, 1.0830, 1.0845, 1.0840, 1.0855, 1.0862, 1.0850, 1.0868,
+                               1.0875, 1.0870, 1.0882, 1.0890, 1.0885, 1.0895, 1.0905, 1.0900, 1.0912, 1.0918,
+                               1.0910, 1.0925, 1.0930, 1.0922, 1.0935, 1.0942, 1.0938, 1.0950, 1.0958, 1.0965],
+                        borderColor: '#00d2ff',
+                        backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { y: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } } } }
+            });
+
+            // Indicator Doughnut
+            const ctx2 = document.getElementById('indicatorDoughnut').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['MACD', 'MA Crossover', 'Ichimoku Cloud', 'RSI Reversal', 'Bollinger Bands', 'EMA Trend'],
+                    datasets: [{
+                        data: [20, 20, 15, 15, 15, 15],
+                        backgroundColor: ['#0088ff', '#00d2ff', '#00e676', '#ffb300', '#9467bd', '#ff3366'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } } }
+            });
+
+            // Drawdown Chart
+            const ctx3 = document.getElementById('drawdownChart').getContext('2d');
+            new Chart(ctx3, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 25}, (_, i) => `W${i+1}`),
+                    datasets: [{
+                        label: 'Portfolio Drawdown (%)',
+                        data: [0, -1.2, -0.8, -2.5, -1.8, -3.4, -2.1, -4.8, -3.2, -6.1, -8.42, -5.2, -4.1, -2.8, -1.5, -3.2, -2.0, -1.1, -0.5, 0, -1.2, -0.8, 0, 0, 0],
+                        borderColor: '#ff3366',
+                        backgroundColor: 'rgba(255, 51, 102, 0.15)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, scales: { y: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } } } }
+            });
+
+            // Exposure Doughnut
+            const ctx4 = document.getElementById('exposureDoughnut').getContext('2d');
+            new Chart(ctx4, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Europe (EUR/USD, GBP/USD)', 'Asia (USD/JPY)', 'Asia-Pacific (AUD/USD)', 'Emerging Asia (USD/INR)'],
+                    datasets: [{
+                        data: [50, 25, 15, 10],
+                        backgroundColor: ['#0088ff', '#00e676', '#ffb300', '#9467bd'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } } } }
+            });
+
+            // Session Bar Chart
+            const ctx5 = document.getElementById('sessionBarChart').getContext('2d');
+            new Chart(ctx5, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'Average P&L per Trade ($)',
+                        data: [-10, -5, 2, 5, 8, 12, 45, 80, 120, 140, 95, 110, 180, 250, 220, 160, 90, 40, 25, 10, 5, 0, -5, -8],
+                        backgroundColor: Array.from({length: 24}, (_, i) => (i >= 13 && i <= 16) ? '#00e676' : ((i >= 7 && i <= 12) ? '#0088ff' : '#64748b'))
+                    }]
+                },
+                options: { responsive: true, scales: { y: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } } } }
+            });
+
+            // Monte Carlo Histogram
+            const ctx6 = document.getElementById('mcChart').getContext('2d');
+            new Chart(ctx6, {
+                type: 'bar',
+                data: {
+                    labels: ['-$160k', '-$120k', '-$80k (VaR 95%)', '-$40k', '$0', '+$40k', '+$80k', '+$120k', '+$160k', '+$200k'],
+                    datasets: [{
+                        label: 'Simulated Scenario Frequency',
+                        data: [120, 380, 950, 1850, 2400, 2100, 1350, 620, 180, 50],
+                        backgroundColor: ['#ff3366', '#ff3366', '#ffb300', '#0088ff', '#0088ff', '#00e676', '#00e676', '#00e676', '#00e676', '#00e676']
+                    }]
+                },
+                options: { responsive: true, scales: { y: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } } } }
+            });
+
+            // Equity Growth Comparison
+            const ctx7 = document.getElementById('equityGrowthChart').getContext('2d');
+            new Chart(ctx7, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                    datasets: [
+                        { label: 'RL PPO ($128.4k)', data: [100, 103, 107, 111, 115, 118, 122, 125, 128.4], borderColor: '#00e676', borderWidth: 2.5 },
+                        { label: 'Composite ($124.2k)', data: [100, 102.5, 105.8, 109, 112.5, 115.8, 119, 121.5, 124.2], borderColor: '#00d2ff', borderWidth: 2.5 },
+                        { label: 'ML Random Forest ($119.8k)', data: [100, 101.8, 104.2, 107.5, 110.2, 113.1, 115.8, 117.9, 119.8], borderColor: '#ffb300', borderWidth: 2 },
+                        { label: 'MA Crossover ($107.9k)', data: [100, 101, 102.2, 103.5, 104.8, 105.9, 106.8, 107.2, 107.9], borderColor: '#94a3b8', borderWidth: 1.5, borderDash: [4, 4] }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: '#223254' }, ticks: { color: '#94a3b8' } } } }
+            });
+        };
+    </script>
+</body>
+</html>

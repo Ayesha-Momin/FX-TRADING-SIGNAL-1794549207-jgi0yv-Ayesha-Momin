@@ -1,0 +1,8 @@
+StrategyID,StrategyName,Category,Description,Benchmark
+1,Composite,Multi-Factor,"Weighted consensus of trend, momentum, and volatility breakout indicators",Buy & Hold
+2,MA_Cross,Trend Following,Dual exponential moving average crossover with ATR trailing stop,SMA 50
+3,MACD_Trend,Momentum,MACD histogram expansion and zero-line momentum confirmation,EMA 26
+4,RSI_Reversal,Mean Reversion,Overbought (70) and Oversold (30) statistical bounce strategy,Cash
+5,ML_RF,Machine Learning,Random Forest Classifier with 35+ engineered time-series features,Composite
+6,ML_XGB,Machine Learning,XGBoost gradient boosted trees with walk-forward early stopping,ML_RF
+7,RL_PPO,Reinforcement Learning,Proximal Policy Optimization agent trained with differential Sharpe reward,ML_XGB
