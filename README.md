@@ -69,6 +69,7 @@ project3/
 │       └── Module3_Backtesting_Engine.bas
 ├── presentation/                                  <-- Deliverable 6: Final Presentation Deck & Script
 │   ├── FX_Signal_Lab_Executive_Presentation.pptx  # 15-Slide Native 16:9 Institutional Presentation
+│   ├── Project_Demo_Video_Player.html             # Interactive 10-Minute Video Demonstration Player
 │   └── Presentation_Deck_and_Script.md            # Full Slide Transcription & 10-Min Video Script
 ├── run_pipeline.py                                # Master End-to-End Orchestration Script
 ├── generate_excel_workbook.py                     # Automation script for Excel workbook generation
