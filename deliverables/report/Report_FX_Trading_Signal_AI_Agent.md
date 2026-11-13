@@ -541,7 +541,7 @@ Trainees are evaluated dynamically through the Power BI measure `Simulation Tota
 
 ### 19.1 Repository Structure
 ```
-c:/Users/momin/OneDrive/Desktop/Antigravity Projects/project3/
+FX-TRADING-SIGNAL/
 ├── deliverables/
 │   └── report/
 │       ├── Report_FX_Trading_Signal_AI_Agent.md
